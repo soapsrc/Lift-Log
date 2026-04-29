@@ -162,6 +162,8 @@
 <script>
 const API = "https://script.google.com/macros/s/AKfycbz2aLYTZKMtt47a1sFOhKvnIROYAD5qbWX_-Z5iKLmXX0GQuCxiFcv2vQJ33jnwZwRbZw/exec";
 const DEV_API = API.replace('/exec', '/dev');
+const BODY_WEIGHT = 105; // lbs
+const ASSISTED_EXERCISES = new Set(['Assisted Pull Up', 'Assisted Tricep Dip']);
 let allExercises = [];
 let sessionLog = [];
 let activeCategory = 'all';
@@ -613,10 +615,13 @@ function populateChartSelectors() {
 
 function computeMetric(r) {
   const reps = parseReps(r.reps);
-  const weight = parseFloat(r.weight) || 0;
   const sets = parseFloat(r.sets) || 1;
-  if (chartView === 'volume') return weight * reps * sets;
-  if (chartView === 'orm') return reps > 0 ? weight * (1 + reps / 30) : 0;
+  const rawWeight = parseFloat(r.weight) || 0;
+  const effectiveWeight = ASSISTED_EXERCISES.has(r.exercise)
+    ? Math.max(0, BODY_WEIGHT - rawWeight)
+    : rawWeight;
+  if (chartView === 'volume') return effectiveWeight * reps * sets;
+  if (chartView === 'orm') return reps > 0 ? effectiveWeight * (1 + reps / 30) : 0;
   return 0;
 }
 
